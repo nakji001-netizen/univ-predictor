@@ -2,19 +2,35 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-st.set_page_config(page_title="내신 환산 및 대학 지원 예측기", page_icon="🎓", layout="wide")
+# 1. 페이지 기본 설정
+st.set_page_config(page_title="내신 환산 & 대학 지원 예측기", page_icon="🎓", layout="wide")
 
+# 모바일 & PC 반응형 글자 크기 (Fluid Typography) CSS 주입
 st.markdown("""
     <style>
-    .responsive-title { font-size: 2.2rem; font-weight: 700; line-height: 1.3; margin-bottom: 1rem; }
-    @media (max-width: 768px) { .responsive-title { font-size: 1.5rem; } }
-    .legend-box { display: inline-block; width: 15px; height: 15px; margin-right: 5px; vertical-align: middle; border-radius: 3px; }
+    /* 화면 크기에 따라 글자 크기가 자연스럽게 변하는 반응형 제목 */
+    .responsive-title { 
+        font-size: clamp(1.6rem, 4vw + 0.5rem, 2.5rem); 
+        font-weight: 700; 
+        line-height: 1.3; 
+        margin-bottom: 1rem; 
+    }
+    /* 본문 설명글도 반응형으로 조절 */
+    .responsive-desc {
+        font-size: clamp(0.9rem, 1.5vw + 0.5rem, 1.1rem);
+        margin-bottom: 2rem;
+    }
+    .legend-box { 
+        display: inline-block; width: 15px; height: 15px; margin-right: 5px; vertical-align: middle; border-radius: 3px; 
+    }
     </style>
-    <div class="responsive-title">🎓 5등급 환산 & 원스톱 대학 지원 예측기 (전체 데이터맵)</div>
+    <div class="responsive-title">🎓 내신 환산 & 대학 지원 예측기</div>
+    <div class="responsive-desc">
+        입력하신 내신 성적을 바탕으로 2025학년도 수시 전형결과 전체 표본 데이터를 분석하여 <b>상향/적정/하향 지원 가능 대학</b>을 정밀하게 예측합니다.
+    </div>
 """, unsafe_allow_html=True)
 
-st.write("입력하신 5등급제 내신을 9등급제로 환산하고, 2025학년도 수시 전형결과의 **모든 표본 데이터를 빠짐없이 반영하여** 지원 가능 대학을 정밀 분석합니다.")
-
+# 2. 5등급 <-> 9등급 환산 기준 데이터 (대진대 표본)
 grade_5_points = np.round(np.linspace(1.00, 5.00, 81), 2)
 grade_9_avg_points = [
     1.18, 1.36, 1.51, 1.63, 1.73, 1.85, 1.95, 2.05, 2.14, 2.25, 2.34, 2.42, 2.48, 2.61, 2.69, 2.79, 2.82, 2.97, 3.06, 3.15,
@@ -24,6 +40,7 @@ grade_9_avg_points = [
     8.74
 ]
 
+# 3. 대학 전형결과 DB (PDF 전체 자료 100% 탑재)
 univ_data = [
     # ---- 인문계열 (수도권) ----
     {"계열": "인문", "대학": "서울대", "전형명": "지역균형", "전형종류": "학생부종합", "합격컷": 1.27},
@@ -75,7 +92,6 @@ univ_data = [
     {"계열": "인문", "대학": "건국대", "전형명": "KU자기추천", "전형종류": "학생부종합", "합격컷": 2.61},
     {"계열": "인문", "대학": "한성대", "전형명": "교과우수", "전형종류": "학생부교과", "합격컷": 2.65},
     {"계열": "인문", "대학": "신한대", "전형명": "학생부우수자", "전형종류": "학생부교과", "합격컷": 2.67},
-    
     {"계열": "인문", "대학": "인천가톨릭대", "전형명": "ICCU미래인재", "전형종류": "학생부교과", "합격컷": 2.71},
     {"계열": "인문", "대학": "가톨릭대", "전형명": "지역균형", "전형종류": "학생부교과", "합격컷": 2.73},
     {"계열": "인문", "대학": "서경대", "전형명": "교과균형", "전형종류": "학생부교과", "합격컷": 2.77},
@@ -217,6 +233,7 @@ univ_data = [
     {"계열": "인문", "대학": "칼빈대", "전형명": "일반학생", "전형종류": "학생부교과", "합격컷": 6.17},
     {"계열": "인문", "대학": "서울기독대", "전형명": "일반전형", "전형종류": "학생부교과", "합격컷": 6.36},
 
+    # ---- 인문계열 (비수도권) ----
     {"계열": "인문", "대학": "원광대", "전형명": "지역인재종합(전북)", "전형종류": "학생부종합", "합격컷": 1.51},
     {"계열": "인문", "대학": "공주교대", "전형명": "교직적성인재", "전형종류": "학생부종합", "합격컷": 2.40},
     {"계열": "인문", "대학": "부산교대", "전형명": "지역인재", "전형종류": "학생부종합", "합격컷": 2.49},
@@ -366,6 +383,7 @@ univ_data = [
     {"계열": "인문", "대학": "전남대(여수)", "전형명": "지역인재", "전형종류": "학생부교과", "합격컷": 6.41},
     {"계열": "인문", "대학": "호남대", "전형명": "일반학생", "전형종류": "학생부교과", "합격컷": 6.52},
 
+    # ---- 자연계열 (수도권) ----
     {"계열": "자연", "대학": "서울대", "전형명": "지역균형", "전형종류": "학생부종합", "합격컷": 1.24},
     {"계열": "자연", "대학": "연세대", "전형명": "추천형", "전형종류": "학생부교과", "합격컷": 1.25},
     {"계열": "자연", "대학": "고려대", "전형명": "학교추천", "전형종류": "학생부교과", "합격컷": 1.37},
@@ -385,9 +403,9 @@ univ_data = [
     {"계열": "자연", "대학": "숙명여대", "전형명": "지역균형선발", "전형종류": "학생부교과", "합격컷": 1.88},
     {"계열": "자연", "대학": "이화여대", "전형명": "미래인재(서류)", "전형종류": "학생부종합", "합격컷": 1.93},
     {"계열": "자연", "대학": "서울대", "전형명": "일반전형", "전형종류": "학생부종합", "합격컷": 1.95},
-    {"계열": "자연", "대학": "서울과기대", "전형명": "고교추천", "전형종류": "학생부교과", "합격컷": 2.01},
+    {"계열": "자연", "대학": "서울과기대", "전형명": "추천", "전형종류": "학생부교과", "합격컷": 2.01},
     {"계열": "자연", "대학": "경희대(서울)", "전형명": "네오르네상스", "전형종류": "학생부종합", "합격컷": 2.02},
-    {"계열": "자연", "대학": "국민대", "전형명": "교과성적우수자", "전형종류": "학생부교과", "합격컷": 2.06},
+    {"계열": "자연", "대학": "국민대", "전형명": "교과", "전형종류": "학생부교과", "합격컷": 2.06},
     {"계열": "자연", "대학": "서울시립대", "전형명": "학생부종합II(서류형)", "전형종류": "학생부종합", "합격컷": 2.06},
     {"계열": "자연", "대학": "성균관대", "전형명": "융합형", "전형종류": "학생부종합", "합격컷": 2.11},
     {"계열": "자연", "대학": "동국대", "전형명": "학교장추천인재", "전형종류": "학생부교과", "합격컷": 2.15},
@@ -551,6 +569,7 @@ univ_data = [
     {"계열": "자연", "대학": "성결대", "전형명": "SKU창의적인재", "전형종류": "학생부종합", "합격컷": 5.72},
     {"계열": "자연", "대학": "칼빈대", "전형명": "일반학생", "전형종류": "학생부교과", "합격컷": 6.00},
 
+    # ---- 자연계열 (비수도권) ----
     {"계열": "자연", "대학": "충남대", "전형명": "지역인재", "전형종류": "학생부교과", "합격컷": 1.15},
     {"계열": "자연", "대학": "원광대", "전형명": "지역인재교과(호남)", "전형종류": "학생부교과", "합격컷": 1.23},
     {"계열": "자연", "대학": "원광대", "전형명": "지역인재교과(전북)", "전형종류": "학생부교과", "합격컷": 1.27},
@@ -639,14 +658,29 @@ univ_data = [
 ]
 df = pd.DataFrame(univ_data)
 
-st.subheader("📝 학생 성적 정보 입력")
+# 4. 사용자 입력 UI (듀얼 모드)
+st.subheader("📝 내신 성적 정보 입력")
+
+# 입력 방식 선택 라디오 버튼
+input_method = st.radio(
+    "내신 점수 입력 방식을 선택하세요:", 
+    ["5등급제 점수로 입력 (자동 환산)", "9등급제 점수로 직접 입력"], 
+    horizontal=True
+)
+
 col1, col2 = st.columns(2)
 
 with col1:
-    input_grade_5 = st.number_input(
-        "5등급제 내신 평균을 입력하세요 (1.00 ~ 5.00):", 
-        min_value=1.00, max_value=5.00, value=3.20, step=0.01
-    )
+    if input_method == "5등급제 점수로 입력 (자동 환산)":
+        input_grade_5 = st.number_input(
+            "5등급제 내신 평균을 입력하세요 (1.00 ~ 5.00):", 
+            min_value=1.00, max_value=5.00, value=3.20, step=0.01
+        )
+    else:
+        input_grade_9_direct = st.number_input(
+            "9등급제 내신 평균을 입력하세요 (1.00 ~ 9.00):", 
+            min_value=1.00, max_value=9.00, value=4.11, step=0.01
+        )
 
 with col2:
     selected_track = st.selectbox(
@@ -656,26 +690,35 @@ with col2:
 
 st.divider()
 
+# 5. 계산 및 대학 추천 로직
 if st.button("전체 대학 지원 가능성 분석하기", type="primary"):
-    # 9등급으로 선형 보간 변환
-    converted_9_grade = np.interp(input_grade_5, grade_5_points, grade_9_avg_points)
     
-    # 상단 요약
-    st.success("✅ 변환 완료! 아래 표에서 지원 가능한 전체 대학 리스트를 확인하세요.")
+    # 선택한 입력 방식에 따라 기준값 세팅
+    if input_method == "5등급제 점수로 입력 (자동 환산)":
+        converted_9_grade = np.interp(input_grade_5, grade_5_points, grade_9_avg_points)
+        display_5_grade = f"{input_grade_5:.2f} 등급"
+    else:
+        converted_9_grade = input_grade_9_direct
+        # 9등급 직접 입력 시, 5등급 점수로 역산해서 보여줌
+        estimated_5_grade = np.interp(input_grade_9_direct, grade_9_avg_points, grade_5_points)
+        display_5_grade = f"{estimated_5_grade:.2f} 등급 (역산 추정)"
+
+    # 상단 요약 매트릭
+    st.success("✅ 분석 완료! 아래 표에서 지원 가능한 전체 대학 리스트를 확인하세요.")
     m1, m2 = st.columns(2)
-    m1.metric("입력한 5등급 내신", f"{input_grade_5:.2f} 등급")
-    m2.metric("최종 9등급 환산 내신", f"{converted_9_grade:.2f} 등급")
+    m1.metric("5등급 환산 기준", display_5_grade)
+    m2.metric("최종 9등급 분석 기준점", f"{converted_9_grade:.2f} 등급")
     
     st.write("---")
     st.subheader(f"🎯 9등급 환산 ({converted_9_grade:.2f}등급) 기준 종합 지원표")
     
-    # 현실적 입시 편차를 반영한 3단계 핵심 분석 기준 안내 (±0.4등급 이내만 표시)
+    # 3단계 분석 기준 안내 (±0.2 ~ ±0.4 구간)
     st.markdown("""
         **[ 분석 기준 및 색상 안내 ]** (합격컷 기준)
-        - <span class='legend-box' style='background-color:#fff3e0;'></span> **상향(도전)**: 내 성적보다 합격컷이 0.2 초과 ~ 0.4등급 이하 높음
-        - <span class='legend-box' style='background-color:#e8f5e9;'></span> **적정(소신)**: 내 성적과 합격컷 차이가 ±0.2등급 이내로 유사함
-        - <span class='legend-box' style='background-color:#e3f2fd;'></span> **하향(안정)**: 내 성적보다 합격컷이 0.2 초과 ~ 0.4등급 이하 낮음
-        <br><span style='font-size: 0.9em; color: #666;'>※ 지원 범위를 크게 벗어나는 대학(성적 차이가 0.4등급을 초과하는 곳)은 의미 있는 지원이 어려워 리스트에서 자동 제외됩니다.</span>
+        - <span class='legend-box' style='background-color:#fff3e0;'></span> **상향(도전)**: 내 성적보다 합격컷이 **0.2 ~ 0.4등급** 높음 (어려움)
+        - <span class='legend-box' style='background-color:#e8f5e9;'></span> **적정(소신)**: 내 성적과 합격컷 차이가 **±0.2등급 이내**로 유사함
+        - <span class='legend-box' style='background-color:#e3f2fd;'></span> **하향(안정)**: 내 성적보다 합격컷이 **0.2 ~ 0.4등급** 낮음 (안전함)
+        <br><span style='font-size: 0.85rem; color: #666;'>※ 지원 범위를 크게 벗어나는 대학(성적 차이가 0.4등급을 초과하는 곳)은 의미 있는 지원이 어려워 리스트에서 자동 제외됩니다.</span>
     """, unsafe_allow_html=True)
     
     st.write("") # 간격 띄우기
@@ -686,7 +729,7 @@ if st.button("전체 대학 지원 가능성 분석하기", type="primary"):
     # 점수 차이 계산: 대학 합격컷 - 내 환산 점수
     filtered_df["diff"] = filtered_df["합격컷"] - converted_9_grade
     
-    # 의미 있는 지원 구간(-0.4 ~ +0.4)에 해당하는 대학만 필터링하여 비현실적인 대학 제외
+    # 현실적 지원 가능 구간(-0.4 ~ +0.4) 필터링
     filtered_df = filtered_df[(filtered_df["diff"] >= -0.4) & (filtered_df["diff"] <= 0.4)].copy()
     
     # 3단계 지원 구분 판별 함수
@@ -703,11 +746,11 @@ if st.button("전체 대학 지원 가능성 분석하기", type="primary"):
     # 모든 대학을 합격컷(성적 높은 순) 기준으로 정렬
     filtered_df = filtered_df.sort_values(by="합격컷")
     
-    # 열 순서 재배치 (diff 열은 화면에서 숨김)
+    # 열 순서 재배치
     display_cols = ["지원구분", "대학", "전형명", "전형종류", "합격컷"]
     final_df = filtered_df[display_cols]
 
-    # 행 단위로 배경색 칠하기 (3단계)
+    # 행 단위로 배경색 칠하기
     def highlight_row(row):
         category = row["지원구분"]
         if "상향" in category:
@@ -717,13 +760,13 @@ if st.button("전체 대학 지원 가능성 분석하기", type="primary"):
         else:
             return ['background-color: #e3f2fd; color: #0d47a1'] * len(row)
 
-    # DataFrame에 스타일 적용 (.apply 사용하여 행 전체에 적용)
+    # DataFrame에 스타일 적용
     styled_df = final_df.style.apply(highlight_row, axis=1).format({'합격컷': '{:.2f}'})
     
     if final_df.empty:
-        st.warning("입력하신 점수대(±0.4등급 이내)에 매칭되는 대학 표본이 없습니다. 다른 점수를 입력해 보세요.")
+        st.warning("입력하신 점수대(±0.4등급 이내)에 매칭되는 대학 데이터가 없습니다. 다른 점수를 입력해 보세요.")
     else:
-        # 모든 대학 리스트를 한 번에 스크롤하며 볼 수 있도록 800px 높이로 출력
+        # 모든 대학 리스트를 한 번에 스크롤하며 볼 수 있도록 출력
         st.dataframe(styled_df, use_container_width=True, hide_index=True, height=800)
 
-    st.caption("※ 본 표는 제공된 '2025학년도 수시모집 전형결과' 문서의 전체 표본을 기반으로 구축되었습니다. (위에서부터 성적이 높아야 하는 순으로 정렬)")
+    st.caption("※ 본 표는 제공된 '2025학년도 수시모집 전형결과' 문서를 기반으로 구축되었습니다. (위에서부터 성적이 높아야 하는 순으로 정렬)")
